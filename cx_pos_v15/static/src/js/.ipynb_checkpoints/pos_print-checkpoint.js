@@ -174,14 +174,25 @@ odoo.define('cx_pos_v15.print', function (require) {
           for(let pm_index=0; pm_index < partialPay.length; pm_index++){
             if(partialPay[pm_index].amount < 0) partialPay[pm_index].amount *= -1;
           }
-  
+          
+          let ID = false;
+          let bussinessName = false;
+          let address = false;
+          let mobile = false;
+            
+          if(order_for_print.client){
+              ID = order_for_print.client.vat;
+              bussinessName = order_for_print.client.name;
+              address = order_for_print.client.address;
+              mobile = order_for_print.client.mobile;
+          }
 
           //Make receipt print request
           const receipt = {
               client: {
-                ID: order_for_print.client.vat || "",
-                bussinessName: order_for_print.client.name || "",
-                additionalInfo: `${order_for_print.client.address || ""}, ${order_for_print.client.mobile || ""}`
+                ID: ID || "",
+                bussinessName: bussinessName || "",
+                additionalInfo: `${address || ""}, ${mobile || ""}`
               },
               invoiceComment: "",
               products:products,
