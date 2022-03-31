@@ -18,7 +18,7 @@
         'views/pos_session.xml',
         'views/payment_methods.xml',
         'views/cashier.xml',
-        'views/return.xml',
+        #'views/return.xml',
         'views/header_footer.xml'
     ],
     # 'qweb':[
