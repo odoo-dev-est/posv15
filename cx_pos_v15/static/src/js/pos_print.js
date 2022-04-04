@@ -10,7 +10,7 @@ odoo.define('cx_pos_v15.print', function (require) {
     //Load printer_id and register_id fields
     pos_model.load_fields('account.tax', ['printer_id']);
     pos_model.load_fields('pos.payment.method',['register_id']);
-    pos_model.load_fields('pos.order',['name']);
+   
 
     //Start cashier in Fiscal Printer Machine
     class StartCashier extends PosComponent {
@@ -187,6 +187,20 @@ odoo.define('cx_pos_v15.print', function (require) {
               address = order_for_print.client.address;
               mobile = order_for_print.client.mobile;
           }
+            
+          this.rpc({
+              model:'pos.order',
+              method:'search_read',
+              args: [
+                  [['pos_reference','===',order.name]],
+                  ['name']
+              ],
+              kwargs:{limit:1 },
+          }).then(result =>{
+              console.log(result);
+          });
+            
+            
 
           //Make receipt print request
           const receipt = {
