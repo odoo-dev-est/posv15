@@ -10,6 +10,7 @@ odoo.define('cx_pos_v15.print', function (require) {
     //Load printer_id and register_id fields
     pos_model.load_fields('account.tax', ['printer_id']);
     pos_model.load_fields('pos.payment.method',['register_id']);
+    pos_model.load_fields('pos.order',['name']);
 
     //Start cashier in Fiscal Printer Machine
     class StartCashier extends PosComponent {
