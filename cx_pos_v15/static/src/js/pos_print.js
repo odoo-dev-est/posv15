@@ -17,7 +17,7 @@ odoo.define('cx_pos_v15.print', function (require) {
 
                     self.orders = orders;
                     }
-                },
+                });
    
 
     //Start cashier in Fiscal Printer Machine
