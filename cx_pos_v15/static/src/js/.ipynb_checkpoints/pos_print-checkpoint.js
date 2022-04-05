@@ -6,6 +6,8 @@ odoo.define('cx_pos_v15.print', function (require) {
     const ReceiptScreen = require('point_of_sale.ReceiptScreen');
     const Registries = require('point_of_sale.Registries');
     const pos_model = require('point_of_sale.models');
+    
+    console.log("models", pos_models);
 
     //Load printer_id and register_id fields
     pos_model.load_fields('account.tax', ['printer_id']);
@@ -205,7 +207,7 @@ odoo.define('cx_pos_v15.print', function (require) {
               ],
               kwargs:{limit:1 },
           }).then(result =>{
-              console.log(result);
+              console.log(result)
           });
             
             
