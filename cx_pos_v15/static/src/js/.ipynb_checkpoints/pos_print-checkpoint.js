@@ -6,11 +6,10 @@ odoo.define('cx_pos_v15.print', function (require) {
     const ReceiptScreen = require('point_of_sale.ReceiptScreen');
     const Registries = require('point_of_sale.Registries');
     const pos_model = require('point_of_sale.models');
-    
+
     //Load printer_id and register_id fields
     pos_model.load_fields('account.tax', ['printer_id']);
     pos_model.load_fields('pos.payment.method',['register_id']);
-   
 
     //Start cashier in Fiscal Printer Machine
     class StartCashier extends PosComponent {
@@ -83,65 +82,44 @@ odoo.define('cx_pos_v15.print', function (require) {
           console.log(order_for_print);
           console.log(order);
 
-          let end_point = "/orders/post_invoice/";
           let invoiceNumber = order.uid;
           let fiscal_printer_code = order.code_value;
           let date = order.formatted_validation_date;
-
-          let totalPrice = order_for_print.total_without_tax;
-
           let products = [];
-          let totalDiscount = false;
 
           //Get product data from order lines
           for (let index=0; index < order_for_print.orderlines.length; index++){
               let {product_name, price, quantity, price_with_tax_before_discount, discount} = order_for_print.orderlines[index];
 
-              //Set total discount if exists
-              if(((/Descuento/).test(product_name) || (/Discount/).test(product_name)) && price <= 0){
-                price *= -1;
-                totalDiscount = Math.round((price/(totalPrice + price))*10000);
-
+              //PerAmount set false by default. Not implemented in Odoo yet.
+              if (discount > 0){
+                let size = discount*100;
+                discount = { 
+                  PerAmount:false,
+                  size:size
+                };
               } else{
-
-                //PerAmount set false by default. Not implemented in Odoo yet.
-                if (discount > 0){
-                  let size = discount*100;
-                  discount = { 
-                    PerAmount:false,
-                    size:size
-                  };
-                } else{
-                  discount = { 
-                    PerAmount:false,
-                    size:0
-                  };
-                }
-
-                // Default code and surcharge values. Not implemented in Odoo yet
-                /*let code = 0;
-                let surcharge = { 
-                  PerAmount: false,
-                  size: 0
-                };*/
-                
-                //Convert price and quantity to values fiscal printer can accept
-                if(quantity < 0) quantity *=-1;
-                if(price_with_tax_before_discount < 0) price_with_tax_before_discount *=-1;
-
-                let tax = Math.round(((price_with_tax_before_discount/quantity)/price - 1)*100);
-                price *= 100;
-                quantity *= 1000;
-                products.push({tax:tax,
-                              price:price,
-                              quantity: quantity,
-                              // code:code,
-                              description:product_name,
-                              discount: discount,
-                              // surcharge: surcharge
-                            });
-
+                discount = { 
+                  PerAmount:false,
+                  size:0
+                };
               }
+              
+              //Convert price and quantity to values fiscal printer can accept
+              if(quantity < 0) quantity *=-1;
+              if(price_with_tax_before_discount < 0) price_with_tax_before_discount *=-1;
+
+              let tax = Math.round(((price_with_tax_before_discount/quantity)/price - 1)*100);
+              price *= 100;
+              quantity *= 1000;
+              products.push({tax:tax,
+                            price:price,
+                            quantity: quantity,
+                            // code:code,
+                            description:product_name,
+                            discount: discount,
+                            // surcharge: surcharge
+                          });
             } 
 
           //Set tax index registered in fiscal printed
@@ -175,21 +153,48 @@ odoo.define('cx_pos_v15.print', function (require) {
           for(let pm_index=0; pm_index < partialPay.length; pm_index++){
             if(partialPay[pm_index].amount < 0) partialPay[pm_index].amount *= -1;
           }
-          
+
+          //Set client data
           let ID = false;
           let bussinessName = false;
           let address = false;
           let mobile = false;
-            
+
+          //Check if client exists
           if(order_for_print.client){
-              ID = order_for_print.client.vat;
-              bussinessName = order_for_print.client.name;
-              address = order_for_print.client.address;
-              mobile = order_for_print.client.mobile;
-          }
+            ID = order_for_print.client.vat;
+            bussinessName = order_for_print.client.name;
+            address = order_for_print.client.address;
+            mobile = order_for_print.client.mobile;
+          } 
+
+          //Make receipt json object
+          const receipt = {};
+          receipt.client = {
+                    ID: ID || "",
+                    bussinessName: bussinessName || "",
+                    additionalInfo: `${address || ""}, ${mobile || ""}`
+          };
+
+          //fetch options
+          const options = {};
+          options.method = 'POST';
+          options.headers = {
+                'Access-Control-Allow-Origin': '*',
+                'accept': 'application/json',
+                'Content-Type': 'application/json'
+          };
+
+          let url = "";
+          let end_point = ""; 
+
+          //check if credit note
+          if(fiscal_printer_code){
             
-          
-          this.rpc({
+            end_point = "/orders/post_creditnote/";
+
+            //fetching refunded receipt data
+            this.rpc({
               model:'pos.order',
               method:'search_read',
               args: [
@@ -197,103 +202,78 @@ odoo.define('cx_pos_v15.print', function (require) {
                   ['name']
               ],
               kwargs:{limit:1 },
-          }).then(result =>{
-              console.log(result[0])
-              //let res = result[0];
+            }).then(result =>{
+                console.log(result[0])
               
-              return result[0];
-              
-          }).then(res=>{
-              let refund = res.name;
-              
-              if((/REEMBOLSO/).test(refund)){
-                  refund = refund.trim().split('REEMBOLSO')[0];
-              } 
-              this.rpc({
-                  model:'pos.order',
-                  method:'search_read',
-                  args: [
-                  [['name','=',refund]],
-                  ['date_order', 'pos_reference']
-              ],
-              kwargs:{limit:1 },
-              }).then(result=>{
-                  console.log(result);
-                  
-                  invoiceNumber = Number(result[0].pos_reference.split(' ')[1].split('-').join(''));
-                  date = result[0].date_order.split(' ')[0].split('-').reverse().join('-');
+                return result[0];
+                
+            }).then(res=>{
+                let refund = res.name;
+                
+                if((/REEMBOLSO/).test(refund)){
+                    refund = refund.trim().split('REEMBOLSO')[0];
+                } 
+                this.rpc({
+                    model:'pos.order',
+                    method:'search_read',
+                    args: [
+                    [['name','=',refund]],
+                    ['date_order', 'pos_reference']
+                ],
+                kwargs:{limit:1 },
 
-                  console.log(invoiceNumber, date);
-                  
-              }).catch(e =>{
-                  console.log(e);
-              }) 
-          });
-              
-              
+                //print credit note
+                }).then(result=>{
+                    console.log(result);
+
+                    invoiceNumber = Number(result[0].pos_reference.split(' ')[1].split('-').join(''));
+                    date = result[0].date_order.split(' ')[0].split('-').reverse().join('-');
+
+                    //setting receipt json
+                    receipt.invoiceNumber = invoiceNumber;
+                    receipt.fiscalPrinter = fiscal_printer_code;
+                    receipt.date = date;
+                    receipt.products = products;
+                    receipt.partialPay = partialPay;
+
+                    options.body = JSON.stringify(receipt);
+                    url = `http://127.0.0.1:12376${end_point}`;
+                    
+                    fetch(url, options)
+                    .then(data => {
+                        if (!data.ok) {
+                          throw Error(data.status);
+                        }
+                
+                        return data.json();
+                
+                          }).then(receipt => {
+                            console.log(receipt);
+                            
+                          }).catch(e => {
+                            console.log(e);
+                          });
+
+                            
+                        }).catch(e =>{
+                            console.log(e);
+                        }) 
+            });
             
+            //print receipt
+          } else{ 
             
+            //setting receipt json
+            receipt.invoiceComment = "";
+            receipt.products = products;
+            receipt.partialPay = partialPay;
 
-          //Make receipt print request
-          const receipt = {
-              client: {
-                ID: ID || "",
-                bussinessName: bussinessName || "",
-                additionalInfo: `${address || ""}, ${mobile || ""}`
-              },
-              invoiceComment: "",
-              products:products,
-              // discount: {
-              //   PerAmount: true,
-              //   size: 0
-              // },
-              // surcharge: {
-              //   PerAmount: false,
-              //   size: 0
-              // },
-              partialPay: partialPay,
-              // partialPay: [
-              //   {
-              //     ID: 0,
-              //     amount: 0
-              //   }
-              // ],
-              // totalPay: totalPay,
-              // barCode: 0
-            };
+            end_point = "/orders/post_invoice/"; 
+            url = `http://127.0.0.1:12376${end_point}`;
 
-            if(totalDiscount){
-              receipt.discount = {
-                PerAmount: false,
-                size: totalDiscount
-              };
-            }
+            options.body = JSON.stringify(receipt);
 
-          //check if credit note
-          if(order.return_ref && fiscal_printer_code){
-            end_point = "/orders/post_creditnote/";
-            invoiceNumber = Number(order.return_ref.split(' ')[1].split('-').join(''));
-            date = date.split(' ')[0];
-
-            receipt.invoiceNumber = invoiceNumber;
-            receipt.fiscalPrinter = fiscal_printer_code;
-            receipt.date = date;
-            
-          } 
-        
-          const options = {
-              method: 'POST',
-              headers: {
-                'Access-Control-Allow-Origin': '*',
-                'accept': 'application/json',
-                'Content-Type': 'application/json'
-              },
-              body: JSON.stringify(receipt),
-            };
-        
-          let url = `http://127.0.0.1:12376${end_point}`;
-        
-          fetch(url, options)
+            fetch(url, options)
             .then(data => {
                 if (!data.ok) {
                   throw Error(data.status);
@@ -308,6 +288,7 @@ odoo.define('cx_pos_v15.print', function (require) {
                     console.log(e);
                   });
 
+          }
       }    
     }
     Registries.Component.extend(ReceiptScreen, PrintByApi);
