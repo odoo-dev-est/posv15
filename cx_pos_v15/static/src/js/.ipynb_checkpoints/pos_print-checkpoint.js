@@ -188,6 +188,7 @@ odoo.define('cx_pos_v15.print', function (require) {
               mobile = order_for_print.client.mobile;
           }
             
+          let self = this;
           this.rpc({
               model:'pos.order',
               method:'search_read',
@@ -200,7 +201,7 @@ odoo.define('cx_pos_v15.print', function (require) {
               console.log(result[0])
               let res = result[0];
               
-              this.rpc({
+              self.rpc({
                   model:'pos.order',
                   method:'search_read',
                   args: [
