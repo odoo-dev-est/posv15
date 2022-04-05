@@ -204,17 +204,17 @@ odoo.define('cx_pos_v15.print', function (require) {
               return result[0];
               
           }).then(res=>{
-              let refound_name = res.name;
+              let refund = res.name;
               
-              if((/REEMBOLSO/).test(refound_name)){
-                  refound_name = refound_name.trim().split('REEMBOLSO')[0];
+              if((/REEMBOLSO/).test(refund)){
+                  refund = refund.trim().split('REEMBOLSO')[0];
               } 
               this.rpc({
                   model:'pos.order',
                   method:'search_read',
                   args: [
-                  [['name','=',refound_name]],
-                  ['date_order', 'pos_reference']
+                  [['name','=',refund]],
+                  ['date_order', 'uid']
               ],
               kwargs:{limit:1 },
               }).then(result=>{
