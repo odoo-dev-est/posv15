@@ -214,7 +214,7 @@ odoo.define('cx_pos_v15.print', function (require) {
                   method:'search_read',
                   args: [
                   [['name','=',refund]],
-                  ['date_order', 'uid']
+                  ['date_order', 'pos_reference']
               ],
               kwargs:{limit:1 },
               }).then(result=>{
