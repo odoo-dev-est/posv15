@@ -6,6 +6,7 @@ odoo.define('cx_pos_v15.print', function (require) {
     const ReceiptScreen = require('point_of_sale.ReceiptScreen');
     const Registries = require('point_of_sale.Registries');
     const pos_model = require('point_of_sale.models');
+    const Dialog = require('web.Dialog');
 
     //Load printer_id and register_id fields
     pos_model.load_fields('account.tax', ['printer_id']);
@@ -44,7 +45,14 @@ odoo.define('cx_pos_v15.print', function (require) {
                 }
                 
                 if(data.status === 200){
-                    alert("Session started");
+                    Dialog.alert(
+                        this,
+                        "Your session is started",
+                        {
+                            title: "SUCCESS"
+                        }
+                    )
+                    //alert("Session started");
                 }
         
                 return data.json();
