@@ -202,13 +202,13 @@ odoo.define('cx_pos_v15.print', function (require) {
                   ['name']
               ],
               kwargs:{limit:1 },
-            }).then(result =>{
-                console.log(result[0])
+            //}).then(result =>{
+              //  console.log(result[0])
               
-                return result[0];
+                //return result[0];
                 
             }).then(res=>{
-                let refund = res.name;
+                let refund = res[0].name;
                 
                 if((/REEMBOLSO/).test(refund)){
                     refund = refund.trim().split('REEMBOLSO')[0];
