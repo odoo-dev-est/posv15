@@ -220,6 +220,11 @@ odoo.define('cx_pos_v15.print', function (require) {
               }).then(result=>{
                   console.log(result);
                   
+                  invoiceNumber = Number(result[0].pos_reference.split(' ')[1].split('-').join(''));
+                  date = result[0].date_order.split(' ')[0].split('-').reverse().join('-');
+
+                  console.log(invoiceNumber, date);
+                  
               }).catch(e =>{
                   console.log(e);
               }) 
