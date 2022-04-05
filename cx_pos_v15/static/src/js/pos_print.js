@@ -188,7 +188,7 @@ odoo.define('cx_pos_v15.print', function (require) {
               mobile = order_for_print.client.mobile;
           }
             
-          let self = this;
+          
           this.rpc({
               model:'pos.order',
               method:'search_read',
@@ -204,18 +204,25 @@ odoo.define('cx_pos_v15.print', function (require) {
               return result[0];
               
           }).then(res=>{
+              let refound_name = res.name;
+              
+              if((/REEMBOLSO/).test(refound_name)){
+                  refound_name = refound_name.trim().split('REEMBOLSO')[0];
+              } 
               this.rpc({
                   model:'pos.order',
                   method:'search_read',
                   args: [
-                  [['name','=',res.name]],
+                  [['name','=',refound_name]],
                   ['date_order', 'pos_reference']
               ],
               kwargs:{limit:1 },
               }).then(result=>{
                   console.log(result);
-              })
-              
+                  
+              }).catch(e =>{
+                  console.log(e);
+              }) 
           });
               
               
