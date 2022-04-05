@@ -7,19 +7,9 @@ odoo.define('cx_pos_v15.print', function (require) {
     const Registries = require('point_of_sale.Registries');
     const pos_model = require('point_of_sale.models');
     
-    console.log("models", pos_model);
-
     //Load printer_id and register_id fields
     pos_model.load_fields('account.tax', ['printer_id']);
     pos_model.load_fields('pos.payment.method',['register_id']);
-    pos_model.load_models({
-                model:  'pos.order',
-                fields: ['pos_reference'],
-                loaded: function(self, orders){
-
-                    self.orders = orders;
-                    }
-                });
    
 
     //Start cashier in Fiscal Printer Machine
@@ -207,7 +197,19 @@ odoo.define('cx_pos_v15.print', function (require) {
               ],
               kwargs:{limit:1 },
           }).then(result =>{
-              console.log(result)
+              console.log(result[0])
+              
+              this.rpc({
+                  model:'pos.order',
+                  method:'search_read',
+                  args: [
+                  [['name','like',result[0]]],
+                  ['date_order', 'pos_reference']
+              ],
+              kwargs:{limit:1 },
+              }).then(result=>{
+                  console.log(result);
+              })
           });
             
             
