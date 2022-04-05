@@ -7,7 +7,7 @@ odoo.define('cx_pos_v15.print', function (require) {
     const Registries = require('point_of_sale.Registries');
     const pos_model = require('point_of_sale.models');
     
-    console.log("models", pos_models);
+    console.log("models", pos_model);
 
     //Load printer_id and register_id fields
     pos_model.load_fields('account.tax', ['printer_id']);
