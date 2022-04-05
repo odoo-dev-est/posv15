@@ -194,18 +194,18 @@ odoo.define('cx_pos_v15.print', function (require) {
               method:'search_read',
               args: [
                   [['pos_reference','=',order.name]],
-                  ['name', 'date_order']
+                  ['name']
               ],
               kwargs:{limit:1 },
           }).then(result =>{
-              console.log(result[0])
-              let res = result[0];
+              //console.log(result[0])
+              //let res = result[0];
               
               self.rpc({
                   model:'pos.order',
                   method:'search_read',
                   args: [
-                  [['name','=',res]],
+                  [['name','=',result[0]]],
                   ['date_order', 'pos_reference']
               ],
               kwargs:{limit:1 },
