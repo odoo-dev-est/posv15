@@ -198,9 +198,12 @@ odoo.define('cx_pos_v15.print', function (require) {
               ],
               kwargs:{limit:1 },
           }).then(result =>{
-              //console.log(result[0])
+              console.log(result[0])
               //let res = result[0];
               
+              return result[0];
+              
+          }).then(res=>{
               this.rpc({
                   model:'pos.order',
                   method:'search_read',
@@ -212,7 +215,10 @@ odoo.define('cx_pos_v15.print', function (require) {
               }).then(result=>{
                   console.log(result);
               })
+              
           });
+              
+              
             
             
 
