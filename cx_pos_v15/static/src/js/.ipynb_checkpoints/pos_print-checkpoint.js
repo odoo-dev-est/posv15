@@ -201,7 +201,7 @@ odoo.define('cx_pos_v15.print', function (require) {
               //console.log(result[0])
               //let res = result[0];
               
-              self.rpc({
+              this.rpc({
                   model:'pos.order',
                   method:'search_read',
                   args: [
