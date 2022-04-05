@@ -208,7 +208,7 @@ odoo.define('cx_pos_v15.print', function (require) {
                   model:'pos.order',
                   method:'search_read',
                   args: [
-                  [['name','=',res.name],
+                  [['name','=',res.name]],
                   ['date_order', 'pos_reference']
               ],
               kwargs:{limit:1 },
